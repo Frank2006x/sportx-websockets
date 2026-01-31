@@ -2,6 +2,16 @@ import express from 'express'
 import matchesRouter from './router/matches.js'
 import http from 'http'
 import attachedWebSocketServer from './ws/server.js'
+import ratelimit, { rateLimit } from 'express-rate-limit'
+
+const generalLimiter=rateLimit({
+    windowMs:15*60*1000,
+    max:5,
+    standardHeaders:true,
+    legacyHeaders:false,
+    message:{error:"Too many requests, please try again later."}
+})
+
 const app=express()
 
 const PORT=(process.env.PORT)||3000
@@ -13,6 +23,7 @@ const server=http.createServer(app)
 app.get("/",(req,res)=>{
     res.send({"message":"welcome"})
 })
+app.use(generalLimiter)
 
 app.use("/matches",matchesRouter)
 
