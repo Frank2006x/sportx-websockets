@@ -10,7 +10,7 @@ const MAX_LIMIT = 100;
 matchesRouter.get("/", async (req, res) => {
     const parsed=listMatchesQuerySchema.safeParse(req.query);
     if(!parsed.success){
-        return res.status(400).json({error:parsed.error});
+        return res.status(400).json({error:parsed.error.issues});
     }
     const limit=Math.min(parsed.data.limit ?? 50 , MAX_LIMIT);
 
@@ -27,7 +27,7 @@ matchesRouter.post("/", async (req, res) => {
   let parsed = createMatchSchema.safeParse(req.body);
 
   if (!parsed.success) {
-    return res.status(400).json({ error: parsed.error });
+    return res.status(400).json({ error: parsed.error.issues });
   }
   const {
     data: { startTime, endTime, homeScore, awayScore },
@@ -45,6 +45,9 @@ matchesRouter.post("/", async (req, res) => {
         awayScore: awayScore || 0,
       })
       .returning();
+      if(res.app.locals.broadCastMatchCreated){
+        res.app.locals.broadCastMatchCreated(event);
+      }
 
     return res.status(201).json(event);
   } catch (err) {
